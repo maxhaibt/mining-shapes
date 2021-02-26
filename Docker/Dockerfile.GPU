@@ -1,0 +1,31 @@
+FROM tensorflow/tensorflow:2.2.0-gpu
+
+#install dos2unix (needed to run shell scripts on Windows OS)
+RUN apt-get install -y dos2unix
+
+#install linux software
+COPY installscript.sh /tmp/installscript.sh
+RUN chmod +x /tmp/installscript.sh
+RUN dos2unix /tmp/installscript
+RUN /tmp/installscript.sh
+RUN rm /tmp/installscript.sh
+COPY 6379.conf /etc/redis/6379.conf
+RUN mkdir /home/redis-logs
+RUN chmod -R 777 /home/redis-logs
+
+#install python packages
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --upgrade pip
+RUN pip3 install -r /tmp/requirements.txt
+RUN rm /tmp/requirements.txt
+
+#install object detection api
+COPY installobjectdetectionapi.sh /tmp/installobjectdetectionapi.sh
+RUN chmod +x /tmp/installobjectdetectionapi.sh
+RUN dos2unix /tmp/installobjectdetectionapi.sh
+RUN /tmp/installobjectdetectionapi.sh
+RUN rm /tmp/installobjectdetectionapi.sh
+
+
+# Entrypoint
+ENTRYPOINT ["jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root"]
